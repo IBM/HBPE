@@ -113,10 +113,56 @@ class HbpeTest {
         addAndAssert(1000.0)
         addAndAssert(-1000.0)
         addAndAssert(0.0)
+    }
+
+    @Test
+    fun testGetPercentileVsRefImplRandom() {
+        for (scale in 0..5) {
+            println("Testing Percentile at scale $scale")
+            compareGetPercentileToRefImplRandom(scale)
+        }
+    }
+
+    fun compareGetPercentileToRefImplRandom(scale: Int) {
+        val population = mutableListOf<Double>()
+
+        val refImpl = PercentileInclusive()
+        val hbpe = HistogramBasedPercentileEstimator(scale)
+
+        fun assertResult(p: Double) {
+            val refResult = refImpl.evaluate(population.toDoubleArray(), p)
+            val hbpeResult = hbpe.getPercentile(p)
+            hbpeResult.shouldBeNear(refResult, hbpe.bucketSize)
+        }
+
+        fun addAndAssert(v: Double) {
+            population.add(v)
+            hbpe.addValue(v)
+            assertResult(100.0)
+            assertResult(99.9)
+            assertResult(99.0)
+            assertResult(95.0)
+            assertResult(80.0)
+            assertResult(75.0)
+            assertResult(66.0)
+            assertResult(50.0)
+            assertResult(33.0)
+            assertResult(25.0)
+            assertResult(20.0)
+            assertResult(10.0)
+            assertResult(5.0)
+            assertResult(1.0)
+            assertResult(0.1)
+        }
 
         val rnd = Random(3)
+        fun getRandomValue(): Double {
+            val maxVal = 10000 * hbpe.bucketSize
+            return (rnd.nextDouble() * 2.0 - 1) * maxVal
+        }
+
         for (i in 1..2000) {
-            val v = rnd.nextDouble() * 200 - 300
+            val v = getRandomValue()
             addAndAssert(v)
         }
     }
