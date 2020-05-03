@@ -22,57 +22,58 @@ import java.util.*
 
 class HbpeTest {
     @Test
-    fun testFloorTo() {
-        10.1.floorTo(0.1).shouldBeEqualTo(10.1)
-        2.0.floorTo(1.0).shouldBeEqualTo(2.0)
-        2.0.floorTo(10.0).shouldBeEqualTo(0.0)
-        0.22.floorTo(1.0).shouldBeEqualTo(0.0)
-        0.22.floorTo(0.1).shouldBeEqualTo(0.2)
-        0.29.floorTo(0.1).shouldBeEqualTo(0.2)
-        0.0.floorTo(0.1).shouldBeEqualTo(0.0)
+    fun testFloorResolution() {
+        10.1.floorResolution(1).shouldBeEqualTo(10.1)
+        2.0.floorResolution(0).shouldBeEqualTo(2.0)
+        0.22.floorResolution(0).shouldBeEqualTo(0.0)
+        0.22.floorResolution(1).shouldBeEqualTo(0.2)
+        0.29.floorResolution(1).shouldBeEqualTo(0.2)
+        0.0.floorResolution(1).shouldBeEqualTo(0.0)
+        0.298.floorResolution(2).shouldBeEqualTo(0.29)
     }
 
     @Test
-    fun testFloorToNoPrecisionLoss() {
+    fun testFloorResolutionRandom() {
         val rnd = Random(2)
-        for (i in 0..1000) {
-            val v = rnd.nextDouble() * 0.1 + 15 + 0.1
-            val f = v.floorTo(0.1)
-            f.shouldBeEqualTo(15.1)
+        for (i in 0..100000) {
+            val v = 15 + 0.1 + rnd.nextDouble() * 0.1
+            val floored = v.floorResolution(1)
+            floored.shouldBeEqualTo(15.1)
         }
     }
 
     @Test
-    fun testAddValues() {
+    fun testAddManyValuesAndGetRanks() {
         val rnd = Random(1)
         for (i in 0..2) {
-            val hbpe = HistogramBasedPercentileEstimator(0.1)
+            val hbpe = HistogramBasedPercentileEstimator(1)
             hbpe.getRankThenAdd(0.0)
             for (j in 0..300) {
                 val v = rnd.nextDouble() * 100000
-                val r = hbpe.getRankThenAdd(v)
-                r.shouldBeInRange(0.0, 100.0)
+                val pr = hbpe.getRankThenAdd(v)
+                pr.shouldBeInRange(0.0, 100.0)
             }
         }
     }
 
+    /**
+     * regression test of get percentile by comparing to math3 implementation as a reference
+     */
     @Test
-    fun testGetPercentile() {
-        val samples = mutableListOf<Double>()
+    fun testGetPercentileVsRefImpl() {
+        val population = mutableListOf<Double>()
 
-        val apacheImpl = PercentileInclusive()
-
-        val bucketSize = 0.1
-        val hbpe = HistogramBasedPercentileEstimator(bucketSize)
+        val refImpl = PercentileInclusive()
+        val hbpe = HistogramBasedPercentileEstimator(1)
 
         fun assertResult(p: Double) {
-            val apacheResult = apacheImpl.evaluate(samples.toDoubleArray(), p)
+            val refResult = refImpl.evaluate(population.toDoubleArray(), p)
             val hbpeResult = hbpe.getPercentile(p)
-            hbpeResult.shouldBeNear(apacheResult, bucketSize)
+            hbpeResult.shouldBeNear(refResult, hbpe.bucketSize)
         }
 
         fun addAndAssert(v: Double) {
-            samples.add(v)
+            population.add(v)
             hbpe.addValue(v)
             assertResult(100.0)
             assertResult(99.9)
@@ -114,75 +115,87 @@ class HbpeTest {
         addAndAssert(0.0)
 
         val rnd = Random(3)
-        for (i in 1..1000) {
+        for (i in 1..2000) {
             val v = rnd.nextDouble() * 200 - 300
             addAndAssert(v)
         }
-
     }
 
+    /*
+        Compare get percentile rank to reference naive (unoptimized) implementation
+    */
     @Test
-    fun testGetRank() {
-        val rnd = Random(4)
+    fun testGetPercentileRank() {
+        for (scale in 0..5) {
+            println("Testing PR at scale $scale")
+            compareGetPercentileRankToNaive(scale)
+        }
+    }
 
-        val values = mutableListOf<Double>()
-        val bucketSize = 0.1
-        val hbpe = HistogramBasedPercentileEstimator(bucketSize)
+    fun compareGetPercentileRankToNaive(scale: Int) {
+        val population = mutableListOf<Double>()
+        val hbpe = HistogramBasedPercentileEstimator(scale)
 
         fun addValue(v: Double) {
-            values.add(v)
+            population.add(v)
             hbpe.addValue(v)
         }
-        addValue(10.0)
 
         fun assertAndAdd(v: Double) {
-            val simplePr = calculateSimplePercentileRank(values, v)
-            val hbpePr = hbpe.getRank(v)
-            hbpePr.shouldBeNear(simplePr, bucketSize)
+            val refPr = calculateSimplePercentileRank(population, v)
+            val hbpePr = hbpe.getPercentileRank(v)
+            hbpePr.shouldBeEqualTo(refPr)
+            //hbpePr.shouldBeNear(refPr, 0.1)
             addValue(v)
         }
 
+        addValue(10.0)
+
+        // start with some predetermined values for sanity check
         assertAndAdd(40.0)
         assertAndAdd(20.0)
         assertAndAdd(30.0)
         assertAndAdd(30.0)
 
-        // the accuracy gets betters as the population size is higher, so we fill with many samples initially
-        for (i in 1..100000) {
-            val v = rnd.nextDouble() * 200 - 300
-            addValue(v)
+        val rnd = Random(4)
+        fun getRandomValue(): Double {
+            val maxVal = 100000 * hbpe.bucketSize
+            return (rnd.nextDouble() * 2.0 - 1) * maxVal
         }
 
         for (i in 1..1000) {
-            val v = rnd.nextDouble() * 200 - 300
-            assertAndAdd(v)
+            val v = getRandomValue()
+            // floor value according to scale in order to make sure there are no diffs
+            // because of accuracy loss
+            val floored = v.floorResolution(scale)
+            assertAndAdd(floored)
         }
     }
 
     /*
     Naive implementation of PR. Formula according to https://en.wikipedia.org/wiki/Percentile_rank
      */
-    fun calculateSimplePercentileRank(values: List<Double>, rankOf: Double): Double {
+    fun calculateSimplePercentileRank(population: List<Double>, rankOf: Double): Double {
 
-        val countLess = values.count { it < rankOf }
-        val countEqual = values.count { it == rankOf }
-        return (countLess + 0.5 * countEqual) / values.size * 100
+        val countLess = population.count { it < rankOf }
+        val countEqual = population.count { it == rankOf }
+        return (countLess + 0.5 * countEqual) / population.size * 100
     }
 
     @Test
-    fun testGetPercentilePerf() {
+    fun comparePerformanceToMath3() {
         val rnd = Random(5)
-        val math3stats = DescriptiveStatistics()
-        val hbpe = HistogramBasedPercentileEstimator(0.1)
+        val refImpl = DescriptiveStatistics()
+        val hbpe = HistogramBasedPercentileEstimator(1)
 
-        fun singleRunMath3(v: Double) {
-            math3stats.addValue(v)
-            math3stats.getPercentile(100.0)
-            math3stats.getPercentile(99.0)
-            math3stats.getPercentile(75.0)
-            math3stats.getPercentile(50.0)
-            math3stats.getPercentile(25.0)
-            math3stats.getPercentile(1.0)
+        fun singleRunRefImpl(v: Double) {
+            refImpl.addValue(v)
+            refImpl.getPercentile(100.0)
+            refImpl.getPercentile(99.0)
+            refImpl.getPercentile(75.0)
+            refImpl.getPercentile(50.0)
+            refImpl.getPercentile(25.0)
+            refImpl.getPercentile(1.0)
         }
 
         fun singleRunHbpe(v: Double) {
@@ -195,23 +208,23 @@ class HbpeTest {
             hbpe.getPercentile(1.0)
         }
 
-        fun bench(name: String, singleRun: (Double) -> Unit) {
-            val start1 = System.currentTimeMillis()
+        fun benchmark(name: String, singleRun: (Double) -> Unit) {
+            val startTimeMs = System.currentTimeMillis()
             for (i in 1..10000) {
                 val v = rnd.nextDouble() * 200 - 300
                 singleRun(v)
             }
-            val tookSec = (System.currentTimeMillis() - start1) / 1000.0
+            val tookSec = (System.currentTimeMillis() - startTimeMs) / 1000.0
             println("$name took: $tookSec sec")
         }
 
-        bench("Math3", ::singleRunMath3)
-        math3stats.clear()
-        bench("Math3", ::singleRunMath3)
+        benchmark("math3-cold", ::singleRunRefImpl)
+        refImpl.clear()
+        benchmark("math3-warm", ::singleRunRefImpl)
 
-        bench("Hbpe", ::singleRunHbpe)
+        benchmark("hbpe-cold", ::singleRunHbpe)
         hbpe.clear()
-        bench("Hbpe", ::singleRunHbpe)
+        benchmark("hbpe-warm", ::singleRunHbpe)
     }
 }
 

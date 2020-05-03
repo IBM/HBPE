@@ -10,34 +10,34 @@ Author      : David Ohana (david.ohana@ibm.com)
 
 package com.ibm.hbpe
 
+import org.apache.commons.math3.util.Precision
+import java.math.RoundingMode
 import kotlin.math.floor
+import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 
 
-class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
+class HistogramBasedPercentileEstimator(val bucketScale: Int = 1) {
+    val bucketSize = 10.0.pow(-bucketScale)
 
     @Suppress("unused")
     constructor(
-        bucketSize: Double,
-        sampleCount: Int,
+        bucketScale: Int,
+        valueCount: Int,
         lowBoundInclusive: Double,
         higBoundExclusive: Double,
         buckets: List<Int>
-    ) : this(bucketSize) {
-        this.sampleCount = sampleCount
+    ) : this(bucketScale) {
+        this.valueCount = valueCount
         this.lowBoundInclusive = lowBoundInclusive
         this.higBoundExclusive = higBoundExclusive
-        this.buckets.addAll(buckets)
+        this.bucketsValueCount.addAll(buckets)
     }
 
-    init {
-        require(bucketSize.isFinite())
-    }
+    private val bucketsValueCount = mutableListOf<Int>()
+    private val bucketsHighBound = mutableListOf<Double>()
 
-    private val buckets = mutableListOf<Int>()
-
-    var sampleCount = 0
+    var valueCount = 0
         private set
 
     var lowBoundInclusive = Double.NaN
@@ -47,10 +47,11 @@ class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
         private set
 
     fun clear() {
-        buckets.clear()
-        sampleCount = 0
+        valueCount = 0
         lowBoundInclusive = Double.NaN
         higBoundExclusive = Double.NaN
+        bucketsValueCount.clear()
+        bucketsHighBound.clear()
     }
 
     fun getPercentile(p: Double): Double {
@@ -60,7 +61,7 @@ class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
         require(p >= 0)
         require(p <= 100)
 
-        if (sampleCount == 0)
+        if (valueCount == 0)
             return Double.NaN
 
         if (p == 0.0)
@@ -69,27 +70,28 @@ class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
         if (p == 100.0)
             return higBoundExclusive
 
-        val targetPos = p / 100 * (sampleCount - 1) + 1
+        val targetPos = p / 100 * (valueCount - 1) + 1
         var countSeen = 0.0
         var curBucketHig = lowBoundInclusive
         var prvBucketLow = lowBoundInclusive
 
-        for (curBucketCount in buckets) {
+        for (bucketIndex in 0 until bucketsValueCount.size) {
+            val curBucketValueCount = bucketsValueCount[bucketIndex]
             val curBucketLow = curBucketHig
-            curBucketHig += bucketSize
+            curBucketHig = bucketsHighBound[bucketIndex]
 
-            if (curBucketCount == 0)
+            if (curBucketValueCount == 0)
                 continue
 
-            countSeen += curBucketCount
+            countSeen += curBucketValueCount
 
             if (targetPos == countSeen)
                 return calcPercentile(p, curBucketLow, curBucketHig)
 
-            if (targetPos >= countSeen - curBucketCount + 1 && targetPos < countSeen)
+            if (targetPos >= countSeen - curBucketValueCount + 1 && targetPos < countSeen)
                 return calcPercentile(p, curBucketLow, curBucketHig)
 
-            if (targetPos > countSeen - curBucketCount && targetPos < countSeen)
+            if (targetPos > countSeen - curBucketValueCount && targetPos < countSeen)
                 return calcPercentile(p, prvBucketLow, curBucketHig)
 
             prvBucketLow = curBucketLow
@@ -100,7 +102,7 @@ class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
 
 
     private fun calcPercentile(p: Double, low: Double, high: Double): Double {
-        val x = p / 100 * (sampleCount - 1) + 1
+        val x = p / 100 * (valueCount - 1) + 1
         val part = x - floor(x)
         return low + (high - low) * part
     }
@@ -108,22 +110,24 @@ class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
     fun addValue(v: Double) {
         require(v.isFinite())
 
-        if (sampleCount == 0) {
+        if (valueCount == 0) {
             initializeFirstValue(v)
             return
         }
 
         extendBounds(v)
 
-        sampleCount++
-        val bucketIndex = ((v - lowBoundInclusive) / bucketSize).toInt()
-        buckets[bucketIndex]++
+        valueCount++
+        val range = v.floorResolution(bucketScale) - lowBoundInclusive
+        val bucketIndex = (range / bucketSize).roundToInt()
+
+        bucketsValueCount[bucketIndex]++
     }
 
-    fun getRank(v: Double): Double {
+    fun getPercentileRank(v: Double): Double {
         require(v.isFinite())
 
-        if (sampleCount == 0)
+        if (valueCount == 0)
             return Double.NaN
 
         if (v < lowBoundInclusive)
@@ -133,45 +137,36 @@ class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
             return 100.0
 
         var curBucketIndex = 0
-        var curHighBoundExclusive = lowBoundInclusive + bucketSize
-        // workaround double precision issues
-        curHighBoundExclusive = curHighBoundExclusive.floorTo(bucketSize)
         var countLess = 0
-        while (v >= curHighBoundExclusive) {
-            countLess += buckets[curBucketIndex]
+        while (true) {
+            val curHighBoundExclusive = bucketsHighBound[curBucketIndex]
+            val valueInCurrentBucket = v < curHighBoundExclusive
+            if (valueInCurrentBucket)
+                break
+
+            countLess += bucketsValueCount[curBucketIndex]
             curBucketIndex++
-            curHighBoundExclusive += bucketSize
-            // workaround double precision issues
-            curHighBoundExclusive = curHighBoundExclusive.floorTo(bucketSize)
         }
 
-        if (curBucketIndex >= buckets.size) {
-            println(bucketSize)
-            println(lowBoundInclusive)
-            println(curHighBoundExclusive)
-            println(lowBoundInclusive + bucketSize)
-            println(v)
-            println(curBucketIndex)
-            println(buckets.size)
-            println(countLess)
-        }
 
-        val countEqual = buckets[curBucketIndex]
-        return (countLess + 0.5 * countEqual) / sampleCount * 100
+        val countEqual = bucketsValueCount[curBucketIndex]
+        return (countLess + 0.5 * countEqual) / valueCount * 100
     }
 
     fun getRankThenAdd(v: Double): Double {
-        val pof = getRank(v)
+        val pof = getPercentileRank(v)
         addValue(v)
         return pof
     }
 
 
     private fun initializeFirstValue(v: Double) {
-        lowBoundInclusive = v.floorTo(bucketSize)
+        lowBoundInclusive = v.floorResolution(bucketScale)
         higBoundExclusive = lowBoundInclusive + bucketSize
-        buckets.add(1)
-        sampleCount = 1
+        higBoundExclusive = higBoundExclusive.roundResolution(bucketScale)
+        bucketsValueCount.add(1)
+        bucketsHighBound.add(higBoundExclusive)
+        valueCount = 1
     }
 
     private fun extendBounds(v: Double) {
@@ -182,37 +177,50 @@ class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
     }
 
     private fun extendHighBound(v: Double) {
-        higBoundExclusive = v.floorTo(bucketSize) + bucketSize
-        val bucketCount = ((higBoundExclusive - lowBoundInclusive) / bucketSize).roundToInt()
-        val bucketsToAdd = bucketCount - buckets.size
-        buckets.addAll(List(bucketsToAdd) { 0 })
+        higBoundExclusive = v.floorResolution(bucketScale) + bucketSize
+        higBoundExclusive = higBoundExclusive.roundResolution(bucketScale)
+        val range = higBoundExclusive - lowBoundInclusive
+        val bucketCount = (range / bucketSize).roundToInt()
+        val bucketsToAdd = bucketCount - bucketsValueCount.size
+        bucketsValueCount.addAll(List(bucketsToAdd) { 0 })
+
+        var curHighBound = bucketsHighBound.last()
+        val highBounds = MutableList(bucketsToAdd) { 0.0 }
+        for (i in 0 until highBounds.count()) {
+            curHighBound += bucketSize
+            curHighBound = curHighBound.roundResolution(bucketScale)
+            highBounds[i] = curHighBound
+        }
+        bucketsHighBound.addAll(highBounds)
     }
 
     private fun extendLowBound(v: Double) {
-        lowBoundInclusive = v.floorTo(bucketSize)
-        val bucketCount = ((higBoundExclusive - lowBoundInclusive) / bucketSize).roundToInt()
-        val bucketsToAdd = bucketCount - buckets.size
-        buckets.addAll(0, List(bucketsToAdd) { 0 })
+        lowBoundInclusive = v.floorResolution(bucketScale)
+        val range = higBoundExclusive - lowBoundInclusive
+        val bucketCount = (range / bucketSize).roundToInt()
+        val bucketsToAdd = bucketCount - bucketsValueCount.size
+        bucketsValueCount.addAll(0, List(bucketsToAdd) { 0 })
+
+        var curHighBound = lowBoundInclusive
+        val highBounds = MutableList(bucketsToAdd) { 0.0 }
+        for (i in 0 until highBounds.count()) {
+            curHighBound += bucketSize
+            curHighBound = curHighBound.roundResolution(bucketScale)
+            highBounds[i] = curHighBound
+        }
+        bucketsHighBound.addAll(0, highBounds)
     }
 
     @Suppress("unused")
     fun getBucketsCopy(): List<Int> {
-        return buckets.toList()
+        return bucketsValueCount.toList()
     }
 }
 
-fun Double.fixPrecision(): Double = (this * 1000000000).roundToLong() / 1000000000.0
+fun Double.floorResolution(scale: Int): Double {
+    return Precision.round(this, scale, RoundingMode.FLOOR.ordinal)
+}
 
-
-fun Double.floorTo(precision: Double): Double {
-    // round after the 9th digit to avoid effects of double precision loss
-
-    val a = this / precision
-    val b = a.fixPrecision()
-    val c = floor(b)
-    val d = c * precision
-    val e = d.fixPrecision()
-    return e
-//    val fl = floor(this / precision) * precision
-//    return fl.fixPrecision()
+fun Double.roundResolution(scale: Int): Double {
+    return Precision.round(this, scale)
 }
