@@ -8,45 +8,48 @@ Author      : David Ohana (david.ohana@ibm.com)
 
 package com.ibm.hbpe
 
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeInRange
 import org.amshove.kluent.shouldBeNear
-import org.amshove.kluent.shouldEqualTo
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.commons.math3.stat.descriptive.rank.Percentile
 import org.apache.commons.math3.stat.ranking.NaNStrategy
 import org.apache.commons.math3.util.KthSelector
 import org.apache.commons.math3.util.MedianOf3PivotingStrategy
 import org.junit.Test
+import java.util.*
 
 
 class HbpeTest {
     @Test
     fun testFloorTo() {
-        10.1.floorTo(0.1).shouldEqualTo(10.1)
-        2.0.floorTo(1.0).shouldEqualTo(2.0)
-        2.0.floorTo(10.0).shouldEqualTo(0.0)
-        0.22.floorTo(1.0).shouldEqualTo(0.0)
-        0.22.floorTo(0.1).shouldEqualTo(0.2)
-        0.29.floorTo(0.1).shouldEqualTo(0.2)
-        0.0.floorTo(0.1).shouldEqualTo(0.0)
+        10.1.floorTo(0.1).shouldBeEqualTo(10.1)
+        2.0.floorTo(1.0).shouldBeEqualTo(2.0)
+        2.0.floorTo(10.0).shouldBeEqualTo(0.0)
+        0.22.floorTo(1.0).shouldBeEqualTo(0.0)
+        0.22.floorTo(0.1).shouldBeEqualTo(0.2)
+        0.29.floorTo(0.1).shouldBeEqualTo(0.2)
+        0.0.floorTo(0.1).shouldBeEqualTo(0.0)
     }
 
     @Test
     fun testFloorToNoPrecisionLoss() {
+        val rnd = Random(2)
         for (i in 0..1000) {
-            val v = Math.random() * 0.1 + 15 + 0.1
+            val v = rnd.nextDouble() * 0.1 + 15 + 0.1
             val f = v.floorTo(0.1)
-            f.shouldEqualTo(15.1)
+            f.shouldBeEqualTo(15.1)
         }
     }
 
     @Test
     fun testAddValues() {
+        val rnd = Random(1)
         for (i in 0..2) {
             val hbpe = HistogramBasedPercentileEstimator(0.1)
             hbpe.getRankThenAdd(0.0)
             for (j in 0..300) {
-                val v = Math.random() * 100000
+                val v = rnd.nextDouble() * 100000
                 val r = hbpe.getRankThenAdd(v)
                 r.shouldBeInRange(0.0, 100.0)
             }
@@ -110,8 +113,9 @@ class HbpeTest {
         addAndAssert(-1000.0)
         addAndAssert(0.0)
 
+        val rnd = Random(3)
         for (i in 1..1000) {
-            val v = Math.random() * 200 - 300
+            val v = rnd.nextDouble() * 200 - 300
             addAndAssert(v)
         }
 
@@ -119,6 +123,8 @@ class HbpeTest {
 
     @Test
     fun testGetRank() {
+        val rnd = Random(4)
+
         val values = mutableListOf<Double>()
         val bucketSize = 0.1
         val hbpe = HistogramBasedPercentileEstimator(bucketSize)
@@ -143,12 +149,12 @@ class HbpeTest {
 
         // the accuracy gets betters as the population size is higher, so we fill with many samples initially
         for (i in 1..100000) {
-            val v = Math.random() * 200 - 300
+            val v = rnd.nextDouble() * 200 - 300
             addValue(v)
         }
 
         for (i in 1..1000) {
-            val v = Math.random() * 200 - 300
+            val v = rnd.nextDouble() * 200 - 300
             assertAndAdd(v)
         }
     }
@@ -165,6 +171,7 @@ class HbpeTest {
 
     @Test
     fun testGetPercentilePerf() {
+        val rnd = Random(5)
         val math3stats = DescriptiveStatistics()
         val hbpe = HistogramBasedPercentileEstimator(0.1)
 
@@ -191,7 +198,7 @@ class HbpeTest {
         fun bench(name: String, singleRun: (Double) -> Unit) {
             val start1 = System.currentTimeMillis()
             for (i in 1..10000) {
-                val v = Math.random() * 200 - 300
+                val v = rnd.nextDouble() * 200 - 300
                 singleRun(v)
             }
             val tookSec = (System.currentTimeMillis() - start1) / 1000.0

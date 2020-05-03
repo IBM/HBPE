@@ -17,6 +17,7 @@ import kotlin.math.roundToLong
 
 class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
 
+    @Suppress("unused")
     constructor(
         bucketSize: Double,
         sampleCount: Int,
@@ -194,6 +195,7 @@ class HistogramBasedPercentileEstimator(val bucketSize: Double = 0.1) {
         buckets.addAll(0, List(bucketsToAdd) { 0 })
     }
 
+    @Suppress("unused")
     fun getBucketsCopy(): List<Int> {
         return buckets.toList()
     }
