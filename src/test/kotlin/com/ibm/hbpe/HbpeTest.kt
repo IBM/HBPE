@@ -165,17 +165,17 @@ class HbpeTest {
 
     @Test
     fun testGetPercentilePerf() {
-        val apacheStats = DescriptiveStatistics()
+        val math3stats = DescriptiveStatistics()
         val hbpe = HistogramBasedPercentileEstimator(0.1)
 
-        fun singleRunApache(v: Double) {
-            apacheStats.addValue(v)
-            apacheStats.getPercentile(100.0)
-            apacheStats.getPercentile(99.0)
-            apacheStats.getPercentile(75.0)
-            apacheStats.getPercentile(50.0)
-            apacheStats.getPercentile(25.0)
-            apacheStats.getPercentile(1.0)
+        fun singleRunMath3(v: Double) {
+            math3stats.addValue(v)
+            math3stats.getPercentile(100.0)
+            math3stats.getPercentile(99.0)
+            math3stats.getPercentile(75.0)
+            math3stats.getPercentile(50.0)
+            math3stats.getPercentile(25.0)
+            math3stats.getPercentile(1.0)
         }
 
         fun singleRunHbpe(v: Double) {
@@ -198,9 +198,9 @@ class HbpeTest {
             println("$name took: $tookSec sec")
         }
 
-        bench("Apache", ::singleRunApache)
-        apacheStats.clear()
-        bench("Apache", ::singleRunApache)
+        bench("Math3", ::singleRunMath3)
+        math3stats.clear()
+        bench("Math3", ::singleRunMath3)
 
         bench("Hbpe", ::singleRunHbpe)
         hbpe.clear()

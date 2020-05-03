@@ -62,5 +62,5 @@ git commit -s
 ```
 
 ## Testing
-**FIXME** Please provide information that helps the developer test any changes they make
-before submitting.
+
+This project contains unit tests.  Please make sure to run them and verify that they pass before submitting a PR.
