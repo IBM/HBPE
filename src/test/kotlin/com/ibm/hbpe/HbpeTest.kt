@@ -309,5 +309,14 @@ class HbpeTest {
         hbpe.addValue(3.0)
         hbpe.getValueRange().shouldBeEqualTo(1.1)
     }
+
+    @Test
+    fun testAddManyValues() {
+        val hbpe = HistogramBasedPercentileEstimator(1)
+        for (i in 0..10000000) {
+            val height = Math.random() * 150 + 50
+            hbpe.addValue(height)
+        }
+    }
 }
 

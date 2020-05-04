@@ -171,10 +171,23 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         extendBounds(v)
 
         valueCount++
-        val range = v.floorResolution(precisionScale) - lowBoundInclusive
-        val bucketIndex = (range / bucketSize).roundToInt()
 
-        bucketsValueCount[bucketIndex]++
+        // val range = v.floorResolution(precisionScale) - lowBoundInclusive
+        // val curBucketIndex = (range / bucketSize).roundToInt()
+
+        // avoid using slow floorResolution() as in the calculation above
+        // instead estimate the bucket index and climb up until we reach the correct bucket
+        val range = v - lowBoundInclusive
+        var curBucketIndex = (range / bucketSize).toInt()
+        while (true) {
+            val curHighBoundExclusive = bucketsHighBound[curBucketIndex]
+            val valueInCurrentBucket = v < curHighBoundExclusive
+            if (valueInCurrentBucket)
+                break
+            curBucketIndex++
+        }
+
+        bucketsValueCount[curBucketIndex]++
     }
 
     /**
