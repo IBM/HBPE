@@ -118,4 +118,12 @@
         </plugins>
     </build>
 
+    <distributionManagement>
+        <repository>
+            <id>bintray-davidohana-hbpe</id>
+            <name>davidohana-hbpe</name>
+            <url>https://api.bintray.com/maven/davidohana/hbpe/com.ibm.hbpe/;publish=1</url>
+        </repository>
+    </distributionManagement>
+
 </project>
