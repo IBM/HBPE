@@ -47,4 +47,4 @@ Please make sure to update tests as appropriate.
 
 ### License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[Apache v2](https://www.apache.org/licenses/LICENSE-2.0)
