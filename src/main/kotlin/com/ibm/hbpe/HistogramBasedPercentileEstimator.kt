@@ -20,11 +20,14 @@ import kotlin.math.roundToInt
 /**
  * Creates a new Histogram-based Percentile Estimator
  *
+ * The estimator inserts the population into buckets of predefined size instead of storing the whole population.
+ * This is beneficial in case the population size is significantly higher than the value range.
+ *
  * The precision scale affects the precision of the estimator, as a trade-of of required memory / run-time.
- * Noth required memory and calculation time is O(number of buckets), which is value_range / bucket_size.
+ * Both required memory and calculation time is O(number of buckets), which is [getValueRange] / [bucketSize].
  *
  * @param precisionScale the required resolution, which affect the bucket size of the histogram. Bucket size is
- * 1/10^precisionScale  (0 for bucket size 1.0, 1 for bucket size 0.1, 2 for bucket size 0.01 and so on)
+ * `1/10^precisionScale` (`0` for bucket size `1.0`, `1` for bucket size `0.1`, `2` for bucket size `0.01` and so on)
  */
 class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     val bucketSize = 10.0.pow(-precisionScale)
@@ -84,6 +87,10 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         bucketsHighBound.clear()
     }
 
+    /**
+     * Calculate the range of the population
+     * @return High bound - low bound, or [Double.NaN] is population is empty.
+     */
     fun getValueRange(): Double {
         if (valueCount == 0)
             return Double.NaN
@@ -91,6 +98,12 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         return range.roundResolution(precisionScale)
     }
 
+    /**
+     * Calculate the `p` th percentile of the current population.
+     *
+     * @param p The required percentile in range 0 .. 100
+     * @return Estimated value in the requested percentile or [Double.NaN] is population is empty.
+     */
     fun getPercentile(p: Double): Double {
         //  possible optimization: traverse in reverse if p > 50
 
@@ -144,6 +157,9 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         return low + (high - low) * part
     }
 
+    /**
+     * Add a new value to the population
+     */
     fun addValue(v: Double) {
         require(v.isFinite())
 
@@ -161,6 +177,11 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         bucketsValueCount[bucketIndex]++
     }
 
+    /**
+     * Calculate the Percentile Rank of the specified value, without adding it to the population.
+     *
+     * @return A percentile rank value in range 0 .. 100 or [Double.NaN] is population is empty.
+     */
     fun getPercentileRank(v: Double): Double {
         require(v.isFinite())
 
@@ -190,6 +211,10 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         return (countLess + 0.5 * countEqual) / valueCount * 100
     }
 
+
+    /**
+     * Get the percentile rank of the specified value and after that, adds it to the population.
+     */
     fun getRankThenAdd(v: Double): Double {
         val pof = getPercentileRank(v)
         addValue(v)
