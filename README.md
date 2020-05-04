@@ -30,12 +30,14 @@ or to your `pom.xml`
 
 ```xml
 <dependency>
-  <groupId>ibm</groupId>
+  <groupId>com.ibm</groupId>
   <artifactId>hbpe</artifactId>
   <version>1.0.0</version>
   <type>pom</type>
 </dependency>
 ```
+
+[ ![Download](https://api.bintray.com/packages/davidohana/hbpe/com.ibm.hbpe/images/download.svg?version=1.0.0) ](https://bintray.com/davidohana/hbpe/com.ibm.hbpe/1.0.0/link)
     
 ### Build from Source
 
