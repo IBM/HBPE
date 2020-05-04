@@ -33,3 +33,5 @@ logs/
 repository/
 data/
 out/
+
+settings.xml
