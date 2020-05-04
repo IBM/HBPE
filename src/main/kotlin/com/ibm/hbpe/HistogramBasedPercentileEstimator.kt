@@ -17,6 +17,15 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 
 
+/**
+ * Creates a new Histogram-based Percentile Estimator
+ *
+ * The precision scale affects the precision of the estimator, as a trade-of of required memory / run-time.
+ * Noth required memory and calculation time is O(number of buckets), which is value_range / bucket_size.
+ *
+ * @param precisionScale the required resolution, which affect the bucket size of the histogram. Bucket size is
+ * 1/10^precisionScale  (0 for bucket size 1.0, 1 for bucket size 0.1, 2 for bucket size 0.01 and so on)
+ */
 class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     val bucketSize = 10.0.pow(-precisionScale)
 
@@ -63,12 +72,23 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         src.bucketsValueCount
     )
 
+    /**
+     * Reset the state of the instance
+     *
+     */
     fun clear() {
         valueCount = 0
         lowBoundInclusive = Double.NaN
         higBoundExclusive = Double.NaN
         bucketsValueCount.clear()
         bucketsHighBound.clear()
+    }
+
+    fun getValueRange(): Double {
+        if (valueCount == 0)
+            return Double.NaN
+        val range = higBoundExclusive - lowBoundInclusive
+        return range.roundResolution(precisionScale)
     }
 
     fun getPercentile(p: Double): Double {
