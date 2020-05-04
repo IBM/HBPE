@@ -20,7 +20,7 @@ import kotlin.math.roundToInt
 /**
  * Creates a new Histogram-based Percentile Estimator
  *
- * The estimator inserts the population into buckets of predefined size instead of storing the whole population.
+ * The estimator inserts the population into buckets of a predefined size instead of storing the whole population.
  * This is beneficial in case the population size is significantly higher than the value range.
  *
  * The precision scale affects the precision of the estimator, as a trade-of of required memory / run-time.

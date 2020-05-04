@@ -2,20 +2,18 @@
 
 ### Introduction
 
-HBPE is a JVM library for efficient estimation of [percentiles](https://en.wikipedia.org/wiki/Percentile) and percentile ranks for a big stream of numbers.
+HBPE is a JVM library for efficient estimation of [percentiles](https://en.wikipedia.org/wiki/Percentile) and [percentile ranks](https://en.wikipedia.org/wiki/Percentile_rank) on a big stream of numbers.
 
-HBPE is based on the assumption that population (all numbers that we will ever encounter) are distributed in a 
-reasonable-sized range. The range of numbers does not have to be known in advance. For example - our population might be 
-human heights, therefore we know in advance that range is approximately 0-300 cm.
+The estimator inserts the population into bins of a predefined size instead of storing the entire population.
+This is beneficial in case the size of the population is significantly higher than the value range.
+
+The estimator is has a configurable precision scale. The precision scale affects the precision of the estimator, as a trade-of of required memory / run-time.
+
+A naive implementation of percentile calculator would require `O(population size)` space (storing all numbers) and `O(population size)` time per query (iterating all numbers at worst case), whereas HBPE would take `O(number of bins)` for both space and time (bin count is determined by the desired precision and calculated as `value_range/bin_size`). 
+
+HBPE is implemented in Kotlin and can be used from any JVM-based language.
 
 A detailed explanation of how percentiles can be estimated using a Cumulative Frequency Graph can be found [here](http://courses.washington.edu/psy315/tutorials/Frequency_distribution_tutorial.pdf).
-
-A naive implementation of percentile calculator over `N` numbers would require `o(N)` space (storing all numbers) and `o(N)` 
-time per query (iterating all numbers at worst case), whereas HBPE would take `O(NB)` for both space and time where `NB` is 
-the number of bins in the histogram, which is `range/bin_size`. 
-`bin_size` is a configuration parameter that trades-of accuracy for performance. 
- 
-HBPE is implemented in Kotlin but can be used from any JVM-world language.
 
 There are several [variations](https://en.wikipedia.org/wiki/Percentile#Second_variant) of percentile calculation. We made effort and included unit tests to ensure that 
 HBPE conforms with the Microsoft Excel [PERCENTILE.INC](https://support.office.com/en-us/article/percentile-inc-function-680f9539-45eb-410b-9a5e-c1355e5fe2ed) function as much as possible.
