@@ -12,10 +12,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeInRange
 import org.amshove.kluent.shouldBeNear
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-import org.apache.commons.math3.stat.descriptive.rank.Percentile
-import org.apache.commons.math3.stat.ranking.NaNStrategy
-import org.apache.commons.math3.util.KthSelector
-import org.apache.commons.math3.util.MedianOf3PivotingStrategy
 import org.junit.Test
 import java.util.*
 
@@ -272,17 +268,31 @@ class HbpeTest {
         hbpe.clear()
         benchmark("hbpe-warm", ::singleRunHbpe)
     }
+
+
+    @Test
+    fun testCopyConstructor() {
+        fun assertEqual(hbpe1: HistogramBasedPercentileEstimator, hbpe2: HistogramBasedPercentileEstimator) {
+            hbpe2.lowBoundInclusive.shouldBeEqualTo(hbpe1.lowBoundInclusive)
+            hbpe2.higBoundExclusive.shouldBeEqualTo(hbpe1.higBoundExclusive)
+            hbpe2.precisionScale.shouldBeEqualTo(hbpe1.precisionScale)
+            hbpe2.bucketSize.shouldBeEqualTo(hbpe1.bucketSize)
+            hbpe2.valueCount.shouldBeEqualTo(hbpe1.valueCount)
+            hbpe2.bucketsValueCount.shouldBeEqualTo(hbpe1.bucketsValueCount)
+            hbpe2.bucketsHighBound.shouldBeEqualTo(hbpe1.bucketsHighBound)
+        }
+
+        val hbpe1 = HistogramBasedPercentileEstimator(3)
+        val hbpe2 = HistogramBasedPercentileEstimator(hbpe1)
+
+        assertEqual(hbpe1, hbpe2)
+
+        hbpe1.addValue(30.0)
+        hbpe1.addValue(15.0)
+        hbpe1.addValue(150.0)
+
+        val hbpe3 = HistogramBasedPercentileEstimator(hbpe1)
+        assertEqual(hbpe1, hbpe3)
+    }
 }
 
-/*
- Excel style percentile.
- There are quite a few formulas for percentile calculation.
- This adjust the apache impl to ve consistent with the Excel formula (PERCENTILE.INC).
- https://en.wikipedia.org/wiki/Percentile#Second_variant,_'%22%60UNIQ--postMath-00000047-QINU%60%22'
- */
-class PercentileInclusive : Percentile(
-    50.0,
-    EstimationType.R_7,  // use excel style interpolation
-    NaNStrategy.REMOVED,
-    KthSelector(MedianOf3PivotingStrategy())
-)
