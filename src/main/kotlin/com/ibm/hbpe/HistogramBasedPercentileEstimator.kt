@@ -10,8 +10,6 @@ Author      : David Ohana (david.ohana@ibm.com)
 
 package com.ibm.hbpe
 
-import org.apache.commons.math3.util.Precision
-import java.math.RoundingMode
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -292,10 +290,3 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     }
 }
 
-fun Double.floorResolution(scale: Int): Double {
-    return Precision.round(this, scale, RoundingMode.FLOOR.ordinal)
-}
-
-fun Double.roundResolution(scale: Int): Double {
-    return Precision.round(this, scale)
-}
