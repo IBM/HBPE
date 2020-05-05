@@ -1,4 +1,4 @@
-# HBPE - Histogram Based Percentile Estimator
+# HBPE - Histogram Based Percentile Estimator for Java / JVM
 
 ### Introduction
 
@@ -21,6 +21,8 @@ HBPE conforms with the Microsoft Excel [PERCENTILE.INC](https://support.office.c
 ## Performance
 
 ### Usage
+
+
 
 ### Installation
 
@@ -52,7 +54,19 @@ HBPE is available as a package, hosted at the [jcenter](https://bintray.com/davi
 
 [LatencyAnomalyDetection](demo/src/main/java/hbpeDemo/LatencyAnomalyDetection.java) - Perform a simple operation many times and measure the time it took. Identify anomalies in the measured time using if it is above the 99.99 percentile rank.
 
-[BenchmarkGetPercentile](demo/src/main/java/hbpeDemo/BenchmarkGetPercentile.java) - Code of the benchmark comparison presented above: add a random number to the population and calculate 10 & 75 percentiles. Repeat that for 30000 times.
+[BenchmarkGetPercentile](demo/src/main/java/hbpeDemo/BenchmarkGetPercentile.java) - Code of the benchmark comparison presented above: add a random number to the population and calculate the 10th & 75th percentiles. Repeat that for 30000 times.
+
+You can run the demo apps by:
+
+```bash
+git clone https://github.com/IBM/HBPE.git
+
+cd hbpe/demo
+
+mvn exec:java -Dexec.mainClass="hbpeDemo.HeightPercentileCalculator"
+mvn exec:java -Dexec.mainClass="hbpeDemo.LatencyAnomalyDetection"
+mvn exec:java -Dexec.mainClass="hbpeDemo.BenchmarkGetPercentile"
+```
 
 #### For Gradle:
 

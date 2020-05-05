@@ -298,15 +298,19 @@ class HbpeTest {
     @Test
     fun testGetValueRange() {
         val hbpe = HistogramBasedPercentileEstimator(1)
+        hbpe.getBucketCount().shouldBeEqualTo(0)
         hbpe.getValueRange().shouldBeEqualTo(Double.NaN)
 
         hbpe.addValue(2.0)
+        hbpe.getBucketCount().shouldBeEqualTo(1)
         hbpe.getValueRange().shouldBeEqualTo(0.1)
 
         hbpe.addValue(2.0)
+        hbpe.getBucketCount().shouldBeEqualTo(1)
         hbpe.getValueRange().shouldBeEqualTo(0.1)
 
         hbpe.addValue(3.0)
+        hbpe.getBucketCount().shouldBeEqualTo(11)
         hbpe.getValueRange().shouldBeEqualTo(1.1)
     }
 

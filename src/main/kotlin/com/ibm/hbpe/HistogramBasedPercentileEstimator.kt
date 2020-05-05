@@ -97,6 +97,13 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     }
 
     /**
+     * Get the current number of buckets in the histogram
+     */
+    fun getBucketCount(): Int {
+        return bucketsValueCount.size
+    }
+
+    /**
      * Calculate the `p` th percentile of the current population.
      *
      * @param p The required percentile in range 0 .. 100
