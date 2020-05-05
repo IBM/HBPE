@@ -103,9 +103,9 @@ HBPE is available as a package, hosted at the [jcenter](https://bintray.com/davi
 </repositories>
 
 <dependency>
-	<groupId>com.ibm.hbpe</groupId>
-	<artifactId>hbpe</artifactId>
-	<version>1.0.3</version>
+  <groupId>com.ibm.hbpe</groupId>
+  <artifactId>hbpe</artifactId>
+  <version>1.0.3</version>
 </dependency>
 ```
 
