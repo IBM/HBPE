@@ -105,9 +105,25 @@ HBPE is available as a package, hosted at the [jcenter](https://bintray.com/davi
 <dependency>
 	<groupId>com.ibm.hbpe</groupId>
 	<artifactId>hbpe</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3</version>
 </dependency>
 ```
+
+#### For Gradle:
+
+```groovy
+
+// Add jcenter as a repository for dependencies
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation 'com.ibm.hbpe:hbpe:1.0.3'
+}
+```
+
+[ ![Download](https://api.bintray.com/packages/davidohana/hbpe/com.ibm.hbpe/images/download.svg?version=1.0.3) ](https://bintray.com/davidohana/hbpe/com.ibm.hbpe/1.0.3/link)
 
 ### Demo
 
@@ -130,22 +146,6 @@ mvn exec:java -Dexec.mainClass="hbpeDemo.HeightPercentileCalculator"
 mvn exec:java -Dexec.mainClass="hbpeDemo.LatencyAnomalyDetection"
 mvn exec:java -Dexec.mainClass="hbpeDemo.BenchmarkGetPercentile"
 ```
-
-#### For Gradle:
-
-```groovy
-
-// Add jcenter as a repository for dependencies
-repositories {
-    jcenter()
-}
-
-dependencies {
-    implementation 'com.ibm.hbpe:hbpe:1.0.2'
-}
-```
-
-[ ![Download](https://api.bintray.com/packages/davidohana/hbpe/com.ibm.hbpe/images/download.svg?version=1.0.2) ](https://bintray.com/davidohana/hbpe/com.ibm.hbpe/1.0.2/link)
 
 ### Build from Source
 
