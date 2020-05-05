@@ -11,7 +11,7 @@ The estimator is has a configurable precision scale. The precision scale affects
 
 A naive implementation of percentile calculator would require `O(population size)` space (storing all numbers) and `O(population size)` time per query (iterating all numbers at worst case), whereas HBPE would take `O(number of bins)` for both space and time (bin count is determined by the desired precision and calculated as `value_range/bin_size`). 
 
-HBPE is implemented in Kotlin and can be used from any JVM-based language.
+HBPE is implemented in Kotlin and can be used from Java or any other JVM-based language.
 
 A detailed explanation of how percentiles can be estimated using a Cumulative Frequency Graph can be found [here](http://courses.washington.edu/psy315/tutorials/Frequency_distribution_tutorial.pdf).
 
@@ -22,7 +22,7 @@ HBPE conforms with the Microsoft Excel [PERCENTILE.INC](https://support.office.c
 
 HBPE is available as a package, hosted at the [jcenter](https://bintray.com/davidohana/hbpe/com.ibm.hbpe) repository.
 
-If you are using **Maven**:
+For **Maven**:
 
 ```xml
 <!-- Add jcenter as a repository for dependencies --> 
@@ -40,7 +40,7 @@ If you are using **Maven**:
 </dependency>
 ```
 
-If you are using **Gradle**:
+For **Gradle**:
 
 ```groovy
 
@@ -58,11 +58,24 @@ dependencies {
 
 ### Build from Source
 
+```bash
+
+# Clone this repository
+git clone https://github.com/IBM/HBPE.git
+
+cd hbpe
+
+# compile with Maven (maven must be in path)
+mvn clean compile
+```
+
 ### Contributing
 
 Pull requests are very welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
+
+[How to contribute](CONTRIBUTING.md)
 
 ### License
 
