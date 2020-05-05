@@ -4,7 +4,6 @@ import com.ibm.hbpe.HistogramBasedPercentileEstimator;
 
 public final class HeightPercentileCalculator {
     public static void main(String[] args) {
-
         HistogramBasedPercentileEstimator hbpe = new HistogramBasedPercentileEstimator(1);
 
         System.out.println("Populating with synthetic data ..");

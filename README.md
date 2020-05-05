@@ -5,7 +5,7 @@
 HBPE is a JVM library for efficient estimation of [percentiles](https://en.wikipedia.org/wiki/Percentile) and [percentile ranks](https://en.wikipedia.org/wiki/Percentile_rank) on a big stream of numbers.
 
 The estimator inserts the population into bins of a predefined size instead of storing the entire population.
-This is beneficial in case the size of the population is significantly higher than the value range.
+This is beneficial in case the size of the population is significantly higher than the value range, for example a use case of anomaly detection over latency values.
 
 The estimator is has a configurable precision scale. The precision scale affects the precision of the estimator, as a trade-of of required memory / run-time.
 
@@ -20,8 +20,71 @@ HBPE conforms with the Microsoft Excel [PERCENTILE.INC](https://support.office.c
 
 ## Performance
 
+Comparing runtime of HBPE to [DescriptiveStatistics](https://commons.apache.org/proper/commons-math/javadocs/api-3.3/org/apache/commons/math3/stat/descriptive/DescriptiveStatistics.html) (part of [apache.commons.math3](http://commons.apache.org/proper/commons-math/)) and to a naive implementation that stores all numbers in an array. 
+
+Scenario ([source code](demo/src/main/java/hbpeDemo/BenchmarkGetPercentile.java)): 
+
+  Repeat for 30000 times:
+  1. Generate a random number between -100 .. 100
+  1. Add the number to the population
+  1. Calculate 75th percentile
+  1. Calculate 10th percentile
+
+
+```
+*** Starting Naive benchmark
+Naive took 3.767 ms
+final 75 percentile is 50.33568575408211
+final 10 percentile is -79.45891703602994
+
+*** Starting Apache Math3 benchmark
+Apache math3 took 11.549 ms
+final 75 percentile is 50.33531065537358
+final 10 percentile is -79.4619974157278
+
+*** Starting HBPE benchmark
+HBPE took 0.269 ms
+final 75 percentile is 50.324999999999996
+final 10 percentile is -79.41
+```
+
 ### Usage
 
+Create a new estimator. No need to define histogram bounds in advance, as they are expanded dynamically. 
+
+The parameter value of `1` is the precision scale, which tradeoffs the accuracy of the estimator with its performance. It determines the size of each histogram's bin as `1/(10^precisionScale)`.
+
+* 0 - for bin size of 1.0 
+* 1 - for bin size of 0.1  (this is the default)  
+* 2 - for bin size of 0.01
+* and so on..
+
+The accuracy of the estimator is better as the bin size gets smaller, but the required memory and calculation time grows (linear to the number of bins), so make sure to tune it by your expected range of values and accuracy requirements.
+
+```java
+HistogramBasedPercentileEstimator hbpe = new HistogramBasedPercentileEstimator(1);
+```
+
+Add some values (each call takes constant run-time):
+```java
+hbpe.addValue(30.0);
+hbpe.addValue(40.0);
+hbpe.addValue(20.0);
+hbpe.addValue(10.0);
+```
+
+Calculate some percentiles (each call run-time is linear to the number of bins):
+```java
+System.out.println("p50: " + hbpe.getPercentile(50.0)); // p50: 25.05
+System.out.println("p75: " + hbpe.getPercentile(75.0)); // p75: 32.525
+System.out.println("p25: " + hbpe.getPercentile(25.0)); // p25: 17.575000000000003
+```        
+
+Calculate some percentile ranks (each call run-time is linear to the number of bins):
+```java
+System.out.println("PR of 38: " + hbpe.getPercentileRank(38.0)); // PR of 38: 75.0
+System.out.println("PR of 25: " + hbpe.getPercentileRank(25.0)); // PR of 25: 50.0
+```        
 
 
 ### Installation
