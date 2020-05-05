@@ -18,11 +18,15 @@ A detailed explanation of how percentiles can be estimated using a Cumulative Fr
 There are several [variations](https://en.wikipedia.org/wiki/Percentile#Second_variant) of percentile calculation. We made effort and included unit tests to ensure that 
 HBPE conforms with the Microsoft Excel [PERCENTILE.INC](https://support.office.com/en-us/article/percentile-inc-function-680f9539-45eb-410b-9a5e-c1355e5fe2ed) function as much as possible.
 
+## Performance
+
+### Usage
+
 ### Installation
 
 HBPE is available as a package, hosted at the [jcenter](https://bintray.com/davidohana/hbpe/com.ibm.hbpe) repository.
 
-For **Maven**:
+#### For Maven:
 
 ```xml
 <!-- Add jcenter as a repository for dependencies --> 
@@ -40,7 +44,17 @@ For **Maven**:
 </dependency>
 ```
 
-For **Gradle**:
+### Demo
+
+3 sample programs are available under [demo/src/main/java/hbpeDemo](demo/src/main/java/hbpeDemo)
+
+[HeightPercentileCalculator](demo/src/main/java/hbpeDemo/HeightPercentileCalculator.java) - Adds 10M random height values and then calculates the median and the percentile rank of 190cm.
+
+[LatencyAnomalyDetection](demo/src/main/java/hbpeDemo/LatencyAnomalyDetection.java) - Perform a simple operation many times and measure the time it took. Identify anomalies in the measured time using if it is above the 99.99 percentile rank.
+
+[BenchmarkGetPercentile](demo/src/main/java/hbpeDemo/BenchmarkGetPercentile.java) - Code of the benchmark comparison presented above: add a random number to the population and calculate 10 & 75 percentiles. Repeat that for 30000 times.
+
+#### For Gradle:
 
 ```groovy
 
@@ -60,12 +74,12 @@ dependencies {
 
 ```bash
 
-# Clone this repository
+# clone this GitHub repository
 git clone https://github.com/IBM/HBPE.git
 
 cd hbpe
 
-# compile with Maven (maven must be in path)
+# compile and run tests with Maven (mvn tool must be in path)
 mvn clean compile
 ```
 
