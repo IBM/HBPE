@@ -18,27 +18,44 @@ A detailed explanation of how percentiles can be estimated using a Cumulative Fr
 There are several [variations](https://en.wikipedia.org/wiki/Percentile#Second_variant) of percentile calculation. We made effort and included unit tests to ensure that 
 HBPE conforms with the Microsoft Excel [PERCENTILE.INC](https://support.office.com/en-us/article/percentile-inc-function-680f9539-45eb-410b-9a5e-c1355e5fe2ed) function as much as possible.
 
-### Usage
+### Installation
 
-Add as a dependency to your `build.gradle`
-```groovy
-dependencies {
-    implementation 'ibm:hbpe:1.0.0'
-}
-```
-or to your `pom.xml`
+HBPE is available as a package, hosted at the [jcenter](https://bintray.com/davidohana/hbpe/com.ibm.hbpe) repository.
+
+If you are using **Maven**:
 
 ```xml
+<!-- Add jcenter as a repository for dependencies --> 
+<repositories>
+    <repository>
+        <id>jcenter</id>
+        <url>https://jcenter.bintray.com/</url>
+    </repository>
+</repositories>
+
 <dependency>
-  <groupId>com.ibm</groupId>
-  <artifactId>hbpe</artifactId>
-  <version>1.0.0</version>
-  <type>pom</type>
+	<groupId>com.ibm.hbpe</groupId>
+	<artifactId>hbpe</artifactId>
+	<version>1.0.2</version>
 </dependency>
 ```
 
-[ ![Download](https://api.bintray.com/packages/davidohana/hbpe/com.ibm.hbpe/images/download.svg?version=1.0.0) ](https://bintray.com/davidohana/hbpe/com.ibm.hbpe/1.0.0/link)
-    
+If you are using **Gradle**:
+
+```groovy
+
+// Add jcenter as a repository for dependencies
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation 'com.ibm.hbpe:hbpe:1.0.2'
+}
+```
+
+[ ![Download](https://api.bintray.com/packages/davidohana/hbpe/com.ibm.hbpe/images/download.svg?version=1.0.2) ](https://bintray.com/davidohana/hbpe/com.ibm.hbpe/1.0.2/link)
+
 ### Build from Source
 
 ### Contributing
