@@ -57,8 +57,9 @@ The parameter value of `1` is the precision scale, which tradeoffs the accuracy 
 * 1 - for bin size of 0.1  (this is the default)  
 * 2 - for bin size of 0.01
 * and so on..
+* and so on..
 
-The accuracy of the estimator is better as the bin size gets smaller, but the required memory and calculation time grows (linear to the number of bins), so make sure to tune it by your expected range of values and accuracy requirements.
+The accuracy of the estimator gets better as the bin size gets smaller, but the required memory and calculation time grows (linear to the count of bins), so make sure to tune it by your expected range of values and accuracy requirements.
 
 ```java
 HistogramBasedPercentileEstimator hbpe = new HistogramBasedPercentileEstimator(1);
@@ -126,7 +127,7 @@ dependencies {
 
 ### Demo
 
-3 sample programs are available under [demo/src/main/java/hbpeDemo](demo/src/main/java/hbpeDemo)
+Some sample programs are available under [demo/src/main/java/hbpeDemo](demo/src/main/java/hbpeDemo)
 
 [HeightPercentileCalculator](demo/src/main/java/hbpeDemo/HeightPercentileCalculator.java) - Adds 10M random height values and then calculates the median and the percentile rank of 190cm.
 
