@@ -4,10 +4,10 @@
 
 HBPE is a JVM library for efficient estimation of [percentiles](https://en.wikipedia.org/wiki/Percentile) and [percentile ranks](https://en.wikipedia.org/wiki/Percentile_rank) on a big stream of numbers.
 
-The estimator inserts the population into bins of a predefined size instead of storing the entire population.
-This is beneficial in case the size of the population is significantly higher than the value range, for example a use case of anomaly detection over latency values.
+The estimator inserts the population into bins of a predefined size instead of keeping the entire population in memory.
+This is beneficial if the population size is significantly higher than the value range, for example a use case of anomaly detection over latency values.
 
-The estimator is has a configurable precision scale. The precision scale affects the precision of the estimator, as a trade-of of required memory / run-time.
+The estimator has a configurable precision scale. A higher precision scale will make the estimator more accurate, but will require more memory and increase query time.
 
 A naive implementation of percentile calculator would require `O(population size)` space (storing all numbers) and `O(population size)` time per query (iterating all numbers at worst case), whereas HBPE would take `O(number of bins)` for both space and time (bin count is determined by the desired precision and calculated as `value_range/bin_size`). 
 
