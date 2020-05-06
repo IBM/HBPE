@@ -4,8 +4,7 @@
 
 HBPE is a JVM library for efficient estimation of [percentiles](https://en.wikipedia.org/wiki/Percentile) and [percentile ranks](https://en.wikipedia.org/wiki/Percentile_rank) on a big stream of numbers.
 
-The estimator inserts the population into bins of a predefined size instead of keeping the entire population in memory.
-This is beneficial if the population size is significantly higher than the value range, for example a use case of anomaly detection over latency values.
+Streaming: In many use cases, it is required to calculate percentile or percentile rank after each value being added. For example a use case of anomaly detection over latency values. This kind of calculation might be very inefficient if we keep entire population in memory. Instead of this, HBPE inserts the population into bins of a predefined size. This is typically beneficial if the population size is significantly higher than the value range.
 
 The estimator has a configurable precision scale. A higher precision scale will make the estimator more accurate, but will require more memory and increase query time.
 
