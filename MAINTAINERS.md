@@ -1,3 +1,3 @@
 # MAINTAINERS
 
-David Ohana - david.ohana@ibm.com
+David Ohana / IBM Haifa Research Lab  - david.ohana@ibm.com
