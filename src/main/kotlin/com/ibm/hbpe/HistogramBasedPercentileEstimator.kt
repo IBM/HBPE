@@ -30,10 +30,10 @@ import kotlin.math.roundToInt
 class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     val bucketSize = 10.0.pow(-precisionScale)
 
-    internal val bucketsValueCount = mutableListOf<Int>()
+    internal val bucketsValueCount = mutableListOf<Long>()
     internal val bucketsHighBound = mutableListOf<Double>()
 
-    var valueCount = 0
+    var valueCount = 0L
         private set
 
     var lowBoundInclusive = Double.NaN
@@ -48,7 +48,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     constructor(
         precisionScale: Int,
         lowBoundInclusive: Double,
-        bucketsValueCount: List<Int>
+        bucketsValueCount: List<Long>
     ) : this(precisionScale) {
         this.bucketsValueCount.addAll(bucketsValueCount)
         this.lowBoundInclusive = lowBoundInclusive
@@ -90,7 +90,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
      * @return High bound - low bound, or [Double.NaN] is population is empty.
      */
     fun getValueRange(): Double {
-        if (valueCount == 0)
+        if (valueCount == 0L)
             return Double.NaN
         val range = higBoundExclusive - lowBoundInclusive
         return range.roundResolution(precisionScale)
@@ -116,7 +116,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         require(p >= 0)
         require(p <= 100)
 
-        if (valueCount == 0)
+        if (valueCount == 0L)
             return Double.NaN
 
         if (p == 0.0)
@@ -135,7 +135,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
             val curBucketLow = curBucketHig
             curBucketHig = bucketsHighBound[bucketIndex]
 
-            if (curBucketValueCount == 0)
+            if (curBucketValueCount == 0L)
                 continue
 
             countSeen += curBucketValueCount
@@ -168,7 +168,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     fun addValue(v: Double) {
         require(v.isFinite())
 
-        if (valueCount == 0) {
+        if (valueCount == 0L) {
             initializeFirstValue(v)
             return
         }
@@ -203,7 +203,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     fun getPercentileRank(v: Double): Double {
         require(v.isFinite())
 
-        if (valueCount == 0)
+        if (valueCount == 0L)
             return Double.NaN
 
         if (v < lowBoundInclusive)
@@ -213,7 +213,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
             return 100.0
 
         var curBucketIndex = 0
-        var countLess = 0
+        var countLess = 0L
         while (true) {
             val curHighBoundExclusive = bucketsHighBound[curBucketIndex]
             val valueInCurrentBucket = v < curHighBoundExclusive
@@ -262,7 +262,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         val range = higBoundExclusive - lowBoundInclusive
         val bucketCount = (range / bucketSize).roundToInt()
         val bucketsToAdd = bucketCount - bucketsValueCount.size
-        bucketsValueCount.addAll(List(bucketsToAdd) { 0 })
+        bucketsValueCount.addAll(List(bucketsToAdd) { 0L })
 
         var curHighBound = bucketsHighBound.last()
         val highBounds = MutableList(bucketsToAdd) { 0.0 }
@@ -279,7 +279,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
         val range = higBoundExclusive - lowBoundInclusive
         val bucketCount = (range / bucketSize).roundToInt()
         val bucketsToAdd = bucketCount - bucketsValueCount.size
-        bucketsValueCount.addAll(0, List(bucketsToAdd) { 0 })
+        bucketsValueCount.addAll(0, List(bucketsToAdd) { 0L })
 
         var curHighBound = lowBoundInclusive
         val highBounds = MutableList(bucketsToAdd) { 0.0 }
@@ -292,8 +292,7 @@ class HistogramBasedPercentileEstimator(val precisionScale: Int = 1) {
     }
 
     @Suppress("unused")
-    fun getBucketsCopy(): List<Int> {
+    fun getBucketsCopy(): List<Long> {
         return bucketsValueCount.toList()
     }
 }
-
